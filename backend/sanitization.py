@@ -58,6 +58,8 @@ def _remove_script_tags(text: str) -> str:
         # Find the > after </script
         close_end = text.find(">", close_start)
         if close_end == -1:
+            # No closing > — escape the </script tag, keep the rest
+            result.append(html.escape(text[close_start:]))
             break
 
         # Skip everything from <script ...> through </script ...>
