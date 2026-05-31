@@ -83,6 +83,12 @@ def _remove_html_tags(text: str) -> str:
         def handle_data(self, data):
             self.parts.append(data)
 
+        def handle_entityref(self, name):
+            self.parts.append(f"&{name};")
+
+        def handle_charref(self, name):
+            self.parts.append(f"&#{name};")
+
         def get_text(self):
             return "".join(self.parts)
 

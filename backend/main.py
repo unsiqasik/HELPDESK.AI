@@ -770,7 +770,7 @@ async def analyze_only(request_body: TicketRequest):
 
     # --- Vision Logic (OCR Awareness) ---
     gemini_analysis = {
-        "ocr_text": request_body.image_text or "",
+        "ocr_text": sanitize_text(request_body.image_text) or "",
         "image_description": ""
     }
     
