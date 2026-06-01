@@ -15,6 +15,58 @@ import { SHORTCUT_LIST } from '../hooks/useKeyboardShortcuts';
  */
 export default function KeyboardLegend({ isOpen, onClose }) {
   const overlayRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
+
+  // Focus trap: store previous focus, move into modal, trap Tab, restore on close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Store the element that had focus before the modal opened
+    previousFocusRef.current = document.activeElement;
+
+    // Move focus to the close button on open
+    closeButtonRef.current?.focus();
+
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (e.key !== 'Tab') return;
+
+      // Get all focusable elements inside the modal
+      const focusable = overlayRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable || focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        // Shift+Tab: if on first element, wrap to last
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        // Tab: if on last element, wrap to first
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      // Restore focus to the element that opened the modal
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen, onClose]);
 
   // Close on click outside
   useEffect(() => {
@@ -85,6 +137,7 @@ export default function KeyboardLegend({ isOpen, onClose }) {
             ⌨️ Keyboard Shortcuts
           </h2>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
             aria-label="Close"
             style={{
